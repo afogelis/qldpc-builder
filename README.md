@@ -2,9 +2,9 @@
 
 Construct **quantum low-density parity-check (qLDPC) codes** -- the bivariate-bicycle and
 generalized-bicycle families that have moved qLDPC from theory toward hardware -- and decode them
-with a **belief-propagation + ordered-statistics decoder written from scratch**. The headline study
-benchmarks these high-rate codes against the surface code on the metric that matters most for
-overhead: **encoding rate at a fixed logical error rate**.
+with a **belief-propagation + ordered-statistics decoder written from scratch**. The study
+benchmarks these high-rate codes against the surface code on **encoding rate at a fixed logical
+error rate**.
 
 This is repo 8 of a ten-part [QEC research portfolio](https://github.com/afogelis/qec-portfolio).
 Where [`decoder-benchmark`](https://github.com/afogelis/decoder-benchmark) treats BP-OSD as an
@@ -21,15 +21,15 @@ it was actually designed for.
 
 *Logical error rate versus physical error rate under the code-capacity bit-flip model for `bb72` and the distance-5 toric code.*
 
-## What this demonstrates
+## Scope
 
 - **qLDPC code construction from scratch:** bivariate-bicycle (`H_X = [A | B]`, `H_Z = [B^T | A^T]` over a 2D torus) and generalized-bicycle codes, plus a hypergraph-product toric baseline, with GF(2) computation of the logical operators and `k`.
-- **A real decoder, not a wrapper:** belief propagation and order-0 ordered-statistics decoding implemented directly over GF(2). OSD always returns a syndrome-consistent correction, which plain BP does not.
+- **Decoder implemented directly:** belief propagation and order-0 ordered-statistics decoding implemented directly over GF(2). OSD always returns a syndrome-consistent correction, which plain BP does not.
 - **Distance metadata:** presets carry literature distances; small codes get exact `d` by enumeration; larger codes report a randomized search upper bound.
 - **Connectivity analysis:** Tanner-graph check weights and qubit degrees quantify the non-local coupling each code requires (without a routing pass).
 - **Phenomenological noise:** independent X/Z Pauli channels with separate BP+OSD decoders on the two syndrome types.
 - **Portfolio integration:** `export_matrices()` writes `Hx`/`Hz` plus an optional Stim syndrome circuit for [`decoder-benchmark`](https://github.com/afogelis/decoder-benchmark).
-- **A scientific comparison:** a code-capacity sweep showing the rate/overhead trade-off between qLDPC and surface codes.
+- **Code-capacity comparison:** a sweep showing the rate/overhead trade-off between qLDPC and surface codes.
 
 ## Decoder
 
@@ -88,9 +88,9 @@ estimate = code_capacity_ler(code, p=0.03, shots=3000, backend="scratch")
 print(estimate.logical_error_rate)
 ```
 
-## Honest scope
+## Scope and limitations
 
-The default headline plots use **code-capacity** bit-flip noise (perfect syndromes). The package also supports **phenomenological** independent X/Z noise in the Python simulator (`qldpc decode --noise phenomenological`). Stim export writes a simplified **code-capacity** syndrome circuit (`X_ERROR` + Z-check `MPP`, no ancilla scheduling). That circuit is for cross-checks and decoder-benchmark handoff, not a hardware-ready qLDPC layout. Exact distance is computed for small `k`; larger presets report literature `d` and a search upper bound.
+The default plots use **code-capacity** bit-flip noise (perfect syndromes). The package also supports **phenomenological** independent X/Z noise in the Python simulator (`qldpc decode --noise phenomenological`). Stim export writes a simplified **code-capacity** syndrome circuit (`X_ERROR` + Z-check `MPP`, no ancilla scheduling). That circuit is for cross-checks and decoder-benchmark handoff, not a hardware-ready qLDPC layout. Exact distance is computed for small `k`; larger presets report literature `d` and a search upper bound.
 
 ## Layout
 
