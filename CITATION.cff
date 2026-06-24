@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "qLDPC Builder: Bivariate-Bicycle Codes and a From-Scratch BP+OSD Decoder"
+abstract: "Construct quantum LDPC codes (bivariate-bicycle and generalized-bicycle families) and decode them with a from-scratch BP+OSD decoder, benchmarked against the surface code on encoding rate."
+type: software
+authors:
+  - family-names: "Fogelis"
+    given-names: "Andrew"
+version: "0.1.0"
+date-released: "2026-06-24"
+license: MIT
+repository-code: "https://github.com/afogelis/qldpc-builder"
+keywords:
+  - quantum-error-correction
+  - qldpc
+  - bivariate-bicycle
+  - bp-osd
+  - belief-propagation
