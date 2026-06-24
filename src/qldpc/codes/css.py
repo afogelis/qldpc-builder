@@ -8,11 +8,15 @@ qubits, the encoding rate, and the logical operators used to score decoding.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from functools import cached_property
+from pathlib import Path
 
 import numpy as np
 
+from ..connectivity import ConnectivityStats, connectivity_stats
+from ..distance import DistanceReport, distance_report
 from ..linalg import css_logicals, rank_gf2
 
 
@@ -23,6 +27,7 @@ class CSSCode:
     check_x: np.ndarray  # (num_x_checks, n) uint8
     check_z: np.ndarray  # (num_z_checks, n) uint8
     name: str = "css"
+    d_literature: int | None = None
 
     def __post_init__(self) -> None:
         if self.check_x.shape[1] != self.check_z.shape[1]:
@@ -58,5 +63,73 @@ class CSSCode:
     def logical_z(self) -> np.ndarray:
         return self.logicals[1]
 
+    def connectivity(self) -> ConnectivityStats:
+        """Tanner-graph degree and check-weight summaries."""
+        return connectivity_stats(self.check_x, self.check_z)
+
+    def distance(self, *, search_trials: int = 4000, seed: int = 2026) -> DistanceReport:
+        """Literature, exact, and search-based distance information."""
+        return distance_report(
+            self.logical_x,
+            self.logical_z,
+            d_literature=self.d_literature,
+            search_trials=search_trials,
+            seed=seed,
+        )
+
     def summary(self) -> str:
-        return f"[[{self.num_qubits}, {self.num_logicals}]] {self.name} (rate {self.rate:.3f})"
+        report = self.distance(search_trials=500, seed=0)
+        distance_text = ""
+        if report.d_exact is not None:
+            distance_text = f", d={report.d_exact}"
+        elif report.d_literature is not None:
+            distance_text = f", d~{report.d_literature} (literature)"
+        elif report.d_upper is not None:
+            distance_text = f", d<={report.d_upper} (search upper bound)"
+        return (
+            f"[[{self.num_qubits}, {self.num_logicals}{distance_text}]] "
+            f"{self.name} (rate {self.rate:.3f})"
+        )
+
+    def export_matrices(
+        self,
+        path: Path | str,
+        *,
+        include_stim: bool = False,
+        px: float = 0.03,
+        pz: float = 0.001,
+    ) -> Path:
+        """Write parity-check matrices and metadata for downstream tools.
+
+        Saves ``Hx.npy``, ``Hz.npy``, ``logical_x.npy``, ``logical_z.npy``, and
+        ``metadata.json``. When ``include_stim=True`` and Stim is installed, also
+        writes ``syndrome.stim``.
+        """
+        target = Path(path)
+        target.mkdir(parents=True, exist_ok=True)
+
+        np.save(target / "Hx.npy", self.check_x)
+        np.save(target / "Hz.npy", self.check_z)
+        np.save(target / "logical_x.npy", self.logical_x)
+        np.save(target / "logical_z.npy", self.logical_z)
+
+        report = self.distance()
+        metadata = {
+            "name": self.name,
+            "n": self.num_qubits,
+            "k": self.num_logicals,
+            "rate": self.rate,
+            "d_literature": self.d_literature,
+            "d_exact": report.d_exact,
+            "d_upper": report.d_upper,
+            "connectivity": self.connectivity().to_dict(),
+        }
+        with (target / "metadata.json").open("w", encoding="utf-8") as handle:
+            json.dump(metadata, handle, indent=2)
+
+        if include_stim:
+            from ..stim_export import export_stim
+
+            export_stim(self, target / "syndrome.stim", px=px, mode="x_only")
+
+        return target

@@ -59,6 +59,7 @@ def build_bivariate_bicycle(
     a_terms: Sequence[Monomial],
     b_terms: Sequence[Monomial],
     name: str | None = None,
+    d_literature: int | None = None,
 ) -> CSSCode:
     """Construct a bivariate bicycle CSS code on an ``ell x m`` torus.
 
@@ -70,7 +71,12 @@ def build_bivariate_bicycle(
     b = _sum_monomials(ell, m, b_terms)
     check_x = np.concatenate([a, b], axis=1) & 1
     check_z = np.concatenate([b.T, a.T], axis=1) & 1
-    return CSSCode(check_x=check_x, check_z=check_z, name=name or f"BB(l={ell},m={m})")
+    return CSSCode(
+        check_x=check_x,
+        check_z=check_z,
+        name=name or f"BB(l={ell},m={m})",
+        d_literature=d_literature,
+    )
 
 
 #: Small, well-known bivariate bicycle instances suitable for code-capacity sweeps.
@@ -81,6 +87,7 @@ BB_PRESETS: dict[str, dict] = {
         "m": 6,
         "a_terms": [(3, 0), (0, 1), (0, 2)],
         "b_terms": [(0, 3), (1, 0), (2, 0)],
+        "d_literature": 6,
     },
     # [[90, 8, 10]] on a 15x3 torus (A = x^9 + y + y^2, B = 1 + x^2 + x^7).
     "bb90": {
@@ -88,6 +95,7 @@ BB_PRESETS: dict[str, dict] = {
         "m": 3,
         "a_terms": [(9, 0), (0, 1), (0, 2)],
         "b_terms": [(0, 0), (2, 0), (7, 0)],
+        "d_literature": 10,
     },
     # [[108, 8, 10]] on a 9x6 torus.
     "bb108": {
@@ -95,6 +103,7 @@ BB_PRESETS: dict[str, dict] = {
         "m": 6,
         "a_terms": [(3, 0), (0, 1), (0, 2)],
         "b_terms": [(0, 3), (1, 0), (2, 0)],
+        "d_literature": 10,
     },
 }
 

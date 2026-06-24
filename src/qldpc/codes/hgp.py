@@ -14,7 +14,13 @@ import numpy as np
 from .css import CSSCode
 
 
-def hypergraph_product(h1: np.ndarray, h2: np.ndarray, *, name: str = "hgp") -> CSSCode:
+def hypergraph_product(
+    h1: np.ndarray,
+    h2: np.ndarray,
+    *,
+    name: str = "hgp",
+    d_literature: int | None = None,
+) -> CSSCode:
     """CSS code from the hypergraph product of classical checks ``h1`` and ``h2``."""
     h1 = (np.asarray(h1) & 1).astype(np.uint8)
     h2 = (np.asarray(h2) & 1).astype(np.uint8)
@@ -35,7 +41,12 @@ def hypergraph_product(h1: np.ndarray, h2: np.ndarray, *, name: str = "hgp") -> 
         )
         & 1
     )
-    return CSSCode(check_x=check_x, check_z=check_z, name=name)
+    return CSSCode(
+        check_x=check_x,
+        check_z=check_z,
+        name=name,
+        d_literature=d_literature,
+    )
 
 
 def _repetition_check(d: int) -> np.ndarray:
@@ -46,4 +57,9 @@ def _repetition_check(d: int) -> np.ndarray:
 def build_toric_code(distance: int) -> CSSCode:
     """Build the ``[[2 d^2, 2, d]]`` toric code as a surface-code baseline."""
     check = _repetition_check(distance)
-    return hypergraph_product(check, check, name=f"toric(d={distance})")
+    return hypergraph_product(
+        check,
+        check,
+        name=f"toric(d={distance})",
+        d_literature=distance,
+    )

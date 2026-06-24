@@ -35,6 +35,7 @@ def build_generalized_bicycle(
     a_exponents: Sequence[int],
     b_exponents: Sequence[int],
     name: str | None = None,
+    d_literature: int | None = None,
 ) -> CSSCode:
     """Construct a generalized bicycle CSS code on a cyclic group of order ``n``.
 
@@ -46,13 +47,28 @@ def build_generalized_bicycle(
     b = _circulant(n, b_exponents)
     check_x = np.concatenate([a, b], axis=1) & 1
     check_z = np.concatenate([b.T, a.T], axis=1) & 1
-    return CSSCode(check_x=check_x, check_z=check_z, name=name or f"GB(n={n})")
+    return CSSCode(
+        check_x=check_x,
+        check_z=check_z,
+        name=name or f"GB(n={n})",
+        d_literature=d_literature,
+    )
 
 
 #: Small generalized bicycle instances.
 GB_PRESETS: dict[str, dict] = {
-    "gb46": {"n": 23, "a_exponents": [0, 5, 8, 12], "b_exponents": [0, 1, 5, 7]},
-    "gb48": {"n": 24, "a_exponents": [0, 2, 8, 15], "b_exponents": [0, 2, 12, 17]},
+    "gb46": {
+        "n": 23,
+        "a_exponents": [0, 5, 8, 12],
+        "b_exponents": [0, 1, 5, 7],
+        "d_literature": 6,
+    },
+    "gb48": {
+        "n": 24,
+        "a_exponents": [0, 2, 8, 15],
+        "b_exponents": [0, 2, 12, 17],
+        "d_literature": 6,
+    },
 }
 
 

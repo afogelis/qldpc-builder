@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qldpc-builder"
-version = "0.1.0"
+version = "0.2.0"
 description = "Construct quantum LDPC codes (bivariate-bicycle and generalized-bicycle families) and decode them with a from-scratch BP+OSD decoder, benchmarked against the surface code on encoding rate."
 readme = "README.md"
 license = { text = "MIT" }
@@ -26,7 +26,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.4", "pytest-cov>=4.1", "ruff>=0.6"]
+dev = ["pytest>=7.4", "pytest-cov>=4.1", "ruff>=0.6", "stim>=1.12"]
+stim = ["stim>=1.12"]
 # Optional optimized BP-OSD backend. 'ldpc' has no wheels on the newest CPython
 # releases, so the from-scratch decoder is the default and this is opt-in.
 optimized = ["ldpc>=2.1"]

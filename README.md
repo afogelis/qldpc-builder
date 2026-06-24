@@ -25,6 +25,10 @@ it was actually designed for.
 
 - **qLDPC code construction from scratch:** bivariate-bicycle (`H_X = [A | B]`, `H_Z = [B^T | A^T]` over a 2D torus) and generalized-bicycle codes, plus a hypergraph-product toric baseline, with GF(2) computation of the logical operators and `k`.
 - **A real decoder, not a wrapper:** belief propagation and order-0 ordered-statistics decoding implemented directly over GF(2). OSD always returns a syndrome-consistent correction, which plain BP does not.
+- **Distance metadata:** presets carry literature distances; small codes get exact `d` by enumeration; larger codes report a randomized search upper bound.
+- **Connectivity analysis:** Tanner-graph check weights and qubit degrees quantify the non-local coupling each code requires (without a routing pass).
+- **Phenomenological noise:** independent X/Z Pauli channels with separate BP+OSD decoders on the two syndrome types.
+- **Portfolio integration:** `export_matrices()` writes `Hx`/`Hz` plus an optional Stim syndrome circuit for [`decoder-benchmark`](https://github.com/afogelis/decoder-benchmark).
 - **A scientific comparison:** a code-capacity sweep showing the rate/overhead trade-off between qLDPC and surface codes.
 
 ## Decoder
@@ -44,6 +48,8 @@ from-scratch decoder is the default so the study reproduces on any interpreter (
 
 ```bash
 pip install -e ".[dev]"
+# Stim syndrome export + cross-check tests:
+pip install -e ".[stim]"
 # optional compiled BP-OSD backend (Python <= 3.13):
 pip install -e ".[optimized]"
 ```
@@ -59,7 +65,16 @@ python examples/build_bb_decode.py     # writes docs/{qldpc_vs_surface_rate_ler,
 qldpc list
 qldpc info bb72
 qldpc decode bb108 --p 0.03 --shots 3000
+qldpc decode bb72 --noise phenomenological --px 0.03 --pz 0.001 --shots 3000
+qldpc export bb72 --output artifacts/bb72 --stim
 qldpc sweep --codes bb72,bb108,toric:5 --p 0.02,0.04,0.06 --output outputs/sweep.json
+```
+
+Feed the export into decoder-benchmark:
+
+```bash
+cd ../decoder-benchmark
+python examples/run_qldpc_export.py ../qldpc-builder/artifacts/bb72
 ```
 
 ## Library usage
@@ -75,17 +90,14 @@ print(estimate.logical_error_rate)
 
 ## Honest scope
 
-This is a **code-capacity** study (independent bit-flip errors, perfect syndrome extraction) intended
-to illustrate the qLDPC rate advantage *qualitatively*. It does **not** include circuit-level syndrome
-extraction, does not claim specific distances, and does not reproduce any "under 100k physical qubits"
-hardware figure -- those require a full fault-tolerant stack with a syndrome-extraction circuit and
-realistic noise. The codes and decoder here are the building blocks for that, not the finished result.
+The default headline plots use **code-capacity** bit-flip noise (perfect syndromes). The package also supports **phenomenological** independent X/Z noise in the Python simulator (`qldpc decode --noise phenomenological`). Stim export writes a simplified **code-capacity** syndrome circuit (`X_ERROR` + Z-check `MPP`, no ancilla scheduling). That circuit is for cross-checks and decoder-benchmark handoff, not a hardware-ready qLDPC layout. Exact distance is computed for small `k`; larger presets report literature `d` and a search upper bound.
 
 ## Layout
 
 - `src/qldpc/codes/` — `bb` (bivariate bicycle), `gb` (generalized bicycle), `hgp` (toric baseline), `css` (code container)
 - `src/qldpc/decoders/` — `bp` (belief propagation), `bposd` (BP+OSD-0, optional `ldpc` backend)
 - `src/qldpc/linalg.py` — GF(2) rank, null space, logical operators, OSD solve
+- `src/qldpc/{distance,connectivity,stim_export}.py` — distance bounds, Tanner stats, Stim export
 - `src/qldpc/{simulation,metrics,registry,types}.py`
 - `src/qldpc/experiments/scaling.py`, `src/qldpc/viz/plots.py`
 - `examples/build_bb_decode.py`

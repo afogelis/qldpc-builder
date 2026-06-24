@@ -52,3 +52,62 @@ def code_capacity_ler(
             failures += 1
 
     return wilson_interval(failures, shots)
+
+
+def phenomenological_ler(
+    code: CSSCode,
+    *,
+    px: float,
+    pz: float,
+    shots: int,
+    seed: int = 2026,
+    backend: str = "auto",
+    max_iterations: int = 60,
+) -> RateEstimate:
+    """Estimate the logical error rate under independent X and Z Pauli noise.
+
+    X errors are decoded from the Z-check syndrome; Z errors from the X-check
+    syndrome. A shot fails when the residual anticommutes with any logical
+    operator of the opposite type.
+    """
+    rng = np.random.default_rng(seed)
+    decoder_x = make_decoder(
+        code.check_z,
+        np.full(code.num_qubits, px, dtype=float),
+        backend=backend,
+        max_iterations=max_iterations,
+    )
+    decoder_z = make_decoder(
+        code.check_x,
+        np.full(code.num_qubits, pz, dtype=float),
+        backend=backend,
+        max_iterations=max_iterations,
+    )
+    logical_x = code.logical_x
+    logical_z = code.logical_z
+
+    failures = 0
+    for _ in range(shots):
+        x_error = (rng.random(code.num_qubits) < px).astype(np.uint8)
+        z_error = (rng.random(code.num_qubits) < pz).astype(np.uint8)
+
+        syndrome_z = (code.check_z @ x_error) & 1
+        if syndrome_z.any():
+            x_estimate = decoder_x.decode(syndrome_z)
+        else:
+            x_estimate = x_error
+
+        syndrome_x = (code.check_x @ z_error) & 1
+        if syndrome_x.any():
+            z_estimate = decoder_z.decode(syndrome_x)
+        else:
+            z_estimate = z_error
+
+        residual_x = (x_error ^ x_estimate) & 1
+        residual_z = (z_error ^ z_estimate) & 1
+        z_flip = logical_z.shape[0] and np.any((logical_z @ residual_x) & 1)
+        x_flip = logical_x.shape[0] and np.any((logical_x @ residual_z) & 1)
+        if z_flip or x_flip:
+            failures += 1
+
+    return wilson_interval(failures, shots)
