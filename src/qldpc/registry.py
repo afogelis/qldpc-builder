@@ -26,5 +26,5 @@ def build_code(name: str) -> CSSCode:
 
 
 def available_codes() -> list[str]:
-    """Names of all preset codes (toric codes are parameterised separately)."""
+    """Names of all preset codes (toric codes are parameterized separately)."""
     return sorted(BB_PRESETS) + sorted(GB_PRESETS)
